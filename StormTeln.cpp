@@ -17,6 +17,7 @@
 
 Versions PROJECTVER[] = {
     // new version to up
+    "0.0.0.2", "15.02.2025 14:09",
     "0.0.0.1", "14.02.2025 11:40" // (Moscow time)
 };
 

@@ -6,10 +6,99 @@
 #define STELN_STATE_LISTEN		11
 #define STELN_STATE_DISLISTEN	12
 
+class StormTelnMessageEl {
+public:
+	ImVec4 color;
+	unsigned int size;
+	char text[0];
+};
+
+class StormTelnMessage {
+	ImGuiCharIdExt<S16K> data;
+
+public:
+	bool Next(StormTelnMessageEl *&el, VString &str, ImVec4 &color) {
+		if (!el) {
+			if (!data.GetSize())
+				return 0;
+
+			el = (StormTelnMessageEl*) data.GetData();
+			str = VString(el->text, el->size);
+			color = el->color;
+			return 1;
+		}
+
+		char *pel = (char*) el;
+		char *eof = data.GetData() + data.GetMaxSize();
+		char *eod = data.GetData() + data.GetSize();
+
+		pel += sizeof(StormTelnMessageEl) + el->size;
+
+		if (pel + sizeof(StormTelnMessageEl) > eof)
+			return 0;
+
+		if (pel >= eod)
+			return 0;
+
+		el = (StormTelnMessageEl*) pel;
+		if (pel + sizeof(StormTelnMessageEl) + el->size > eof)
+			return 0;
+
+		str = VString(el->text, el->size);
+		color = el->color;
+
+		return 1;
+	}
+
+	bool Add(VString str, ImVec4 color) {
+		int dsz = sizeof(StormTelnMessageEl) + str.size();
+		int fsz = 0;
+
+		if (dsz > data.GetMaxSize()) {
+			data.Clean();
+			return 0;
+		}
+
+		while (data.GetFreeSize() - fsz < sizeof(StormTelnMessageEl) + str.size()) {
+			StormTelnMessageEl *el = (StormTelnMessageEl *)(data.GetData() + fsz);
+			fsz += sizeof(StormTelnMessageEl) + el->size;
+		}
+
+		if (fsz)
+			data.MoveLeft(fsz);
+
+		// Add
+		char *poi = data.GetData() + data.GetSize();
+		StormTelnMessageEl *el = (StormTelnMessageEl *)poi;
+
+		el->color = color;
+		el->size = str;
+		memcpy(el->text, str, str);
+		data.MoveDataSize(dsz);
+
+		return 1;
+	}
+
+
+	void Clean() {
+		data.Clean();
+	}
+
+};
+
 // Global
-ImGuiCharIdExt<512> storm_url;
-ImGuiCharIdExt<S16K> storm_buf;
-ImGuiCharIdExt<512> storm_inbuf, storm_input;
+ImGuiCharIdExt<512> steln_url;
+StormTelnMessage steln_outbuf;
+ImGuiCharIdExt<512> steln_inbuf, steln_input;
+
+bool steln_r = 0, steln_n = 0;
+
+#define STEWLN_COLOR_RED	ImVec4(1.0f, 0.0f, 0.0f, 1.0f)
+#define STEWLN_COLOR_GREEN	ImVec4(0.0f, 1.0f, 0.0f, 1.0f)
+#define STEWLN_COLOR_BLUE	ImVec4(0.0f, 0.0f, 1.0f, 1.0f)
+#define STEWLN_COLOR_WHITE	ImVec4(1.0f, 1.0f, 1.0f, 1.0f)
+#define STEWLN_COLOR_BLACK	ImVec4(0.0f, 0.0f, 0.0f, 1.0f)
+
 
 class StormTeln : public MSVCOT {
 	int state;
@@ -22,7 +111,7 @@ public:
 	StormTeln() {
 		state = STELN_STATE_NONE;
 
-		ConnectPrint(LString() + "Hello from StormTeln!" + " v." + PROJECTVER[0].ver + ".\r\n");
+		ConnectPrint(LString() + "Hello from StormTeln!" + " v." + PROJECTVER[0].ver + ".\r\n", STEWLN_COLOR_BLUE);
 	}
 
 	// Get
@@ -67,12 +156,12 @@ public:
 		return 0;
 	}
 
-	void ConnectPrint(VString line){
-		if (storm_buf.GetFreeSize() < line.size()) {
-			storm_buf.MoveLeft(line.size() - storm_buf.GetFreeSize());
-		}
+	void ConnectPrint(VString line, ImVec4 color){
+		//if (storm_buf.GetFreeSize() < line.size()) {
+		//	storm_buf.MoveLeft(line.size() - storm_buf.GetFreeSize());
+		//}
 
-		storm_buf.AddStr(line);
+		steln_outbuf.Add(line, color);
 	}
 
 	int ConnectProc(){
@@ -81,22 +170,22 @@ public:
 		SString ss;
 		char buf[S1K];
 
-		storm_buf.Clean();
-		storm_inbuf.Clean();
+		steln_outbuf.Clean();
+		steln_inbuf.Clean();
 
-		ConnectPrint(LString() + "Connecting to: '" + storm_url.GetStr() + "'.\r\n");
+		ConnectPrint(LString() + "Connecting to: '" + steln_url.GetStr() + "'.\r\n", STEWLN_COLOR_BLUE);
 
-		cip.Ip(storm_url.GetStr());
+		cip.Ip(steln_url.GetStr());
 
 		sock = cip.Connect();
 
 		if(sock <= 0){
-			ConnectPrint(LString() + "Connection refused.\r\n");
+			ConnectPrint(LString() + "Connection refused.\r\n", STEWLN_COLOR_RED);
 			state = STELN_STATE_NONE;
 			return 0;
 		}
 
-		ConnectPrint(LString() + "Connection established.\r\n");
+		ConnectPrint(LString() + "Connection established.\r\n", STEWLN_COLOR_GREEN);
 		state = STELN_STATE_CONNECTED;
 
 		while (1) {
@@ -104,40 +193,40 @@ public:
 				int rcv = recv(sock, buf, sizeof(buf), 0);
 
 				if (rcv < 0) {
-					ConnectPrint(LString() + "Connection refused.\r\n");
+					ConnectPrint(LString() + "Connection refused.\r\n", STEWLN_COLOR_RED);
 					state = STELN_STATE_NONE;
 					closesocket(sock);
 					return 0;
 				}
 
 				if (rcv == 0) {
-					ConnectPrint(LString() + "Connection closed.\r\n");
+					ConnectPrint(LString() + "Connection closed.\r\n", STEWLN_COLOR_BLUE);
 					state = STELN_STATE_NONE;
 					closesocket(sock);
 					return 0;
 				}
 
-				ConnectPrint(VString(buf, rcv));
+				ConnectPrint(VString(buf, rcv), STEWLN_COLOR_BLACK);
 			}
 
-			if (storm_inbuf) {
-				int snd = send(sock, storm_inbuf, storm_inbuf.GetSize(), 0);
+			if (steln_inbuf) {
+				int snd = send(sock, steln_inbuf, steln_inbuf.GetSize(), 0);
 
 				if (snd < 0) {
-					ConnectPrint(LString() + "Connection refused.\r\n");
+					ConnectPrint(LString() + "Connection refused.\r\n", STEWLN_COLOR_RED);
 					state = STELN_STATE_NONE;
 					closesocket(sock);
 					return 0;
 				}
 
 				if (snd == 0) {
-					ConnectPrint(LString() + "Connection closed.\r\n");
+					ConnectPrint(LString() + "Connection closed.\r\n", STEWLN_COLOR_BLUE);
 					state = STELN_STATE_NONE;
 					closesocket(sock);
 					return 0;
 				}
 
-				storm_inbuf.MoveLeft(snd);
+				steln_inbuf.MoveLeft(snd);
 			}
 		}
 

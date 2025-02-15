@@ -75,7 +75,7 @@
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../msvcore2/include;imgui</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../msvcore2/include;..\imgui</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
@@ -137,12 +137,12 @@
     <ClCompile Include="..\msvcore2\MString.cpp" />
     <ClCompile Include="..\msvcore2\VString.cpp" />
     <ClCompile Include="glad.cpp" />
-    <ClCompile Include="imgui\backends\imgui_impl_glfw.cpp" />
-    <ClCompile Include="imgui\backends\imgui_impl_opengl3.cpp" />
-    <ClCompile Include="imgui\imgui.cpp" />
-    <ClCompile Include="imgui\imgui_draw.cpp" />
-    <ClCompile Include="imgui\imgui_tables.cpp" />
-    <ClCompile Include="imgui\imgui_widgets.cpp" />
+    <ClCompile Include="..\imgui\backends\imgui_impl_glfw.cpp" />
+    <ClCompile Include="..\imgui\backends\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="..\imgui\imgui.cpp" />
+    <ClCompile Include="..\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\imgui\imgui_tables.cpp" />
+    <ClCompile Include="..\imgui\imgui_widgets.cpp" />
     <ClCompile Include="StormTeln.cpp" />
   </ItemGroup>
   <ItemGroup>

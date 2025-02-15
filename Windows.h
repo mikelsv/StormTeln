@@ -1,4 +1,4 @@
-#define MSVGUI_GLOBAL_SCALE 2.3
+#define MSVGUI_GLOBAL_SCALE 2.2
 
 class MsvWnd {
 public:
@@ -173,7 +173,7 @@ void MsvWndRender(){
 		// Event: Button was clicked
 		//inputText = buffer; // Save the entered text into the global variable
 		//ImGui::Text("Button clicked! Text: %s", storm_url); // Display a message with the entered text
-		storm_url.CheckStrSize();
+		steln_url.CheckStrSize();
 		StormTeln.DoConnect();
 	}
 
@@ -185,9 +185,9 @@ void MsvWndRender(){
 	// Input text field
 	// ImGui::InputText creates a text input field where the user can type
 	// The flag ImGuiInputTextFlags_EnterReturnsTrue makes the function return true when Enter is pressed
-	if (ImGui::InputText("Url", storm_url, storm_url.GetMaxSize(), ImGuiInputTextFlags_EnterReturnsTrue)) {		
+	if (ImGui::InputText("Url", steln_url, steln_url.GetMaxSize(), ImGuiInputTextFlags_EnterReturnsTrue)) {
 		// Event: Enter key was pressed
-		storm_url.CheckStrSize();
+		steln_url.CheckStrSize();
 		StormTeln.DoConnect();
 
 		//inputText = buffer; // Save the entered text into the global variable
@@ -201,41 +201,94 @@ void MsvWndRender(){
 	//strncpy(buffer, multiLineText.c_str(), sizeof(buffer));
 	//buffer[sizeof(buffer) - 1] = '\0'; // Ensure null-termination
 
-	// Multi-line text input
-	if (ImGui::InputTextMultiline("##MultilineText", storm_buf, storm_buf.GetSize(), ImVec2(-FLT_MIN, -50))) {
+	// Multi-line text input //
+	// Change colors for the InputTextMultiline widget
+	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 0.0f, 1.0f));  // Yellow text
+	ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.2f, 0.2f, 0.5f, 1.0f)); // Dark blue background
+	ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));  // Red border
+
+	// Define the size of the custom text box
+	ImVec2 textBoxSize = ImVec2(-FLT_MIN, -50); // ImVec2(400, 200);
+
+	// Draw a background for the text box
+	ImGui::BeginChild("ColoredTextBox", textBoxSize, true, ImGuiWindowFlags_AlwaysUseWindowPadding);
+
+	// Get the draw list for custom rendering
+	ImDrawList *drawList = ImGui::GetWindowDrawList();
+	ImVec2 startPos = ImGui::GetCursorScreenPos();
+
+	// Line height for spacing
+	float lineHeight = ImGui::GetTextLineHeight();
+
+	// Render each line with its respective color
+	StormTelnMessageEl *el = 0;
+	VString str;
+	ImVec4 color;
+	int line = 0;
+	
+	while (steln_outbuf.Next(el, str, color)) {
+		// Add some content inside the child window
+		ImGui::TextColored(color, str);
+		//ImGui::Text("This is normal text inside the child window.");
+
+		//drawList->AddText(ImVec2(startPos.x, startPos.y + line * lineHeight), ImGui::GetColorU32(color), str);
+		line++;
+	}
+
+	//for (size_t i = 0; i < 2; ++i) {
+	//	//const ColoredText &line = coloredLines[i];
+	//	drawList->AddText(ImVec2(startPos.x, startPos.y + i * lineHeight), ImGui::GetColorU32(ImVec4(0.0f, 0.0f, 1.0f, 1.0f)), "12345 ");
+	//}
+
+	ImGui::EndChild();
+
+	/*
+	if (ImGui::InputTextMultiline("##MultilineText", storm_buf, storm_buf.GetMaxSize(), ImVec2(-FLT_MIN, -50))) {
 		// Update the global variable when the text changes
 		//multiLineText = buffer;
 		storm_buf.CheckStrSize();
-	}
+	}*/
 
+	// Restore default colors
+	ImGui::PopStyleColor(3);
 
 	// Send data Button //
 	if (ImGui::Button("Send")) {
 		// Event: Button was clicked
 		//inputText = buffer; // Save the entered text into the global variable
 		//ImGui::Text("Button clicked! Text: %s", storm_url); // Display a message with the entered text
-		storm_input.CheckStrSize();		
+		steln_input.CheckStrSize();
 
-		storm_inbuf.AddStr(storm_input.GetStr());
-		storm_inbuf.AddStr("\r\n");
+		steln_inbuf.AddStr(steln_input.GetStr());
+		steln_inbuf.AddStr("\r\n");
 
-		storm_input.Clean();
+		steln_input.Clean();
 	}
 
 	ImGui::SameLine();
 
-	// Input text field
+	// Input text field //	
 // ImGui::InputText creates a text input field where the user can type
 // The flag ImGuiInputTextFlags_EnterReturnsTrue makes the function return true when Enter is pressed
-	if (ImGui::InputText("##Send", storm_input, storm_input.GetMaxSize(), ImGuiInputTextFlags_EnterReturnsTrue)) {
+	if (ImGui::InputText("##Send", steln_input, steln_input.GetMaxSize(), ImGuiInputTextFlags_EnterReturnsTrue)) {
 		// Event: Enter key was pressed
-		storm_input.CheckStrSize();
-		
-		storm_inbuf.AddStr(storm_input.GetStr());
-		storm_inbuf.AddStr("\r\n");
+		steln_input.CheckStrSize();		
 
-		storm_input.Clean();
-	}	
+		if (steln_r)
+			steln_input.AddStr("\r");
+
+		if (steln_n)
+			steln_input.AddStr("\n");
+
+		steln_inbuf.AddStr(steln_input.GetStr());
+
+		steln_input.Clean();
+	}
+
+	ImGui::SameLine();
+	ImGui::Checkbox("\\r", &steln_r);
+	ImGui::SameLine();
+	ImGui::Checkbox("\\n", &steln_n);
 
 	ImGui::End();
 }
