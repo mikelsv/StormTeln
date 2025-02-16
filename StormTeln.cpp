@@ -17,6 +17,7 @@
 
 Versions PROJECTVER[] = {
     // new version to up
+    "0.0.0.3", "16.02.2025 22:31",
     "0.0.0.2", "15.02.2025 14:09",
     "0.0.0.1", "14.02.2025 11:40" // (Moscow time)
 };
@@ -36,6 +37,13 @@ VString _msv_zero_str(&_msv_zero_code, 1);
 
 // OpenGL
 #include "../msvcore2/opengl/mgl.h"
+
+// Functions
+void MsvWndUpdateTitle();
+
+// ImGuiColorTextEdit
+#include "TextEditor.h"
+TextEditor editor;
 
 // Telnet
 #include "StormTeln.h"
@@ -95,6 +103,7 @@ int main(int args, char *arg[], char *env[]) {
     ImGui::StyleColorsLight();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 460");
+    imgui.ConfigWindowsMoveFromTitleBarOnly = 1;
 
     // Extender options
     srand(time());
@@ -112,6 +121,10 @@ int main(int args, char *arg[], char *env[]) {
     bool drawTriangle = true;
     float size = 1.0f;
     float color[4] = { 0.8f, 0.3f, 0.02f, 1.0f };
+
+    // TwxtEditor
+    editor.SetReadOnly(1);
+    //editor.SetColorizerEnable(0);
 
     // Process
     while (!glfwWindowShouldClose(window)) {
@@ -131,30 +144,6 @@ int main(int args, char *arg[], char *env[]) {
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-        //glsl.Render(draw_text.);
-
-        /*
-        proj.Render(delta);
-        //dfont.Draw();
-
-        if(MaticalsOpenGl.IsUpdateTitle()){
-            glfwSetWindowTitle(window, MaticalsOpenGl.GetWindowTitle());
-        }
-
-        // Render
-        if(MaticalsOpenGl.IsRender()){
-            MaticalsOpenGl.time_now = 1. * MaticalsOpenGl.frame_id / MaticalsOpenGl.opt_fps;
-            MaticalsOpenGl.time_delta = 1. / MaticalsOpenGl.opt_fps;
-
-            //MaticalsOpenGlRender.Write(MaticalsOpenGl.frame_id, proj.GetScriptTime() * MaticalsOpenGl.opt_fps);
-
-            //MaticalsOpenGl.frame_id ++;
-
-            if(MaticalsOpenGl.frame_id >= proj.GetScriptTime() * MaticalsOpenGl.opt_fps)
-                break;
-        }*/
-
-        //glfwSetTime(0);
         glfwSwapBuffers(window);
         glfwPollEvents();
     }

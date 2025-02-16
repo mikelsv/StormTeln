@@ -1,4 +1,4 @@
-#define MSVGUI_GLOBAL_SCALE 2.2
+#define MSVGUI_GLOBAL_SCALE 2.1f
 
 class MsvWnd {
 public:
@@ -155,142 +155,77 @@ void MsvWndDrop(GLFWwindow *window, int count, const char **paths) {
 }
 
 void MsvWndRender(){
-	bool show_window, disabled = 0;
+	bool show_window;// , disabled = 0;
+
+	UGLOCK(StormTeln);
 
 	// Window
 	ImGui::Begin("Telnet", &show_window);
 	ImGui::SetWindowFontScale(MSVGUI_GLOBAL_SCALE);
 
-	if (StormTeln.GetState() != STELN_STATE_NONE && StormTeln.GetState() != STELN_STATE_CONNECTED) {
-		// Disable the following widgets
-		ImGui::BeginDisabled(true); // Pass 'true' to disable widgets
-		disabled = 1;
-	}
+	// Connect
+	if (StormTeln.GetState() == STELN_STATE_NONE)
+		if (ImGui::Button("Connect")) {
+			// Event: Button was clicked
+			steln_url.CheckStrSize();
+			StormTeln.DoConnect();
+		}
 
-	// Button
-	// ImGui::Button creates a clickable button
-	if (ImGui::Button(StormTeln.GetState() == STELN_STATE_NONE ? "Connect" : "Disconnect")) {
-		// Event: Button was clicked
-		//inputText = buffer; // Save the entered text into the global variable
-		//ImGui::Text("Button clicked! Text: %s", storm_url); // Display a message with the entered text
-		steln_url.CheckStrSize();
-		StormTeln.DoConnect();
-	}
+	if (StormTeln.GetState() == STELN_STATE_CONNECTED)
+		if (ImGui::Button("Disconnect")) {
+			StormTeln.DoDisconnect();
+		}
 
-	if(disabled)
-		ImGui::EndDisabled(); // Re-enable widgets
+	if (StormTeln.GetState() == STELN_STATE_LISTEN)
+		if (ImGui::Button("Stop")) {
+			StormTeln.DoDisconnect();
+		}
 
 	ImGui::SameLine();
 
-	// Input text field
-	// ImGui::InputText creates a text input field where the user can type
-	// The flag ImGuiInputTextFlags_EnterReturnsTrue makes the function return true when Enter is pressed
-	if (ImGui::InputText("Url", steln_url, steln_url.GetMaxSize(), ImGuiInputTextFlags_EnterReturnsTrue)) {
+	// Url
+	if (ImGui::InputText("##Url", steln_url, steln_url.GetMaxSize(), ImGuiInputTextFlags_EnterReturnsTrue)) {
 		// Event: Enter key was pressed
 		steln_url.CheckStrSize();
 		StormTeln.DoConnect();
+	}
 
-		//inputText = buffer; // Save the entered text into the global variable
-		//ImGui::Text("Enter pressed! Text: %s", storm_url); // Display a message with the entered text
+	// Listen
+	if (StormTeln.GetState() == STELN_STATE_NONE) {
+		ImGui::SameLine();
+
+		if (ImGui::Button("Listen")) {
+			steln_url.CheckStrSize();
+			StormTeln.DoListen();
+		}
 	}
 
 	ImGui::Separator();
 
-	// Create a buffer for the multi-line text
-	//char buffer[1024];
-	//strncpy(buffer, multiLineText.c_str(), sizeof(buffer));
-	//buffer[sizeof(buffer) - 1] = '\0'; // Ensure null-termination
+	editor.Render("TextEditor", ImVec2(-FLT_MIN, -75), 0);
 
-	// Multi-line text input //
-	// Change colors for the InputTextMultiline widget
-	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 0.0f, 1.0f));  // Yellow text
-	ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.2f, 0.2f, 0.5f, 1.0f)); // Dark blue background
-	ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));  // Red border
-
-	// Define the size of the custom text box
-	ImVec2 textBoxSize = ImVec2(-FLT_MIN, -50); // ImVec2(400, 200);
-
-	// Draw a background for the text box
-	ImGui::BeginChild("ColoredTextBox", textBoxSize, true, ImGuiWindowFlags_AlwaysUseWindowPadding);
-
-	// Get the draw list for custom rendering
-	ImDrawList *drawList = ImGui::GetWindowDrawList();
-	ImVec2 startPos = ImGui::GetCursorScreenPos();
-
-	// Line height for spacing
-	float lineHeight = ImGui::GetTextLineHeight();
-
-	// Render each line with its respective color
-	StormTelnMessageEl *el = 0;
-	VString str;
-	ImVec4 color;
-	int line = 0;
-	
-	while (steln_outbuf.Next(el, str, color)) {
-		// Add some content inside the child window
-		ImGui::TextColored(color, str);
-		//ImGui::Text("This is normal text inside the child window.");
-
-		//drawList->AddText(ImVec2(startPos.x, startPos.y + line * lineHeight), ImGui::GetColorU32(color), str);
-		line++;
-	}
-
-	//for (size_t i = 0; i < 2; ++i) {
-	//	//const ColoredText &line = coloredLines[i];
-	//	drawList->AddText(ImVec2(startPos.x, startPos.y + i * lineHeight), ImGui::GetColorU32(ImVec4(0.0f, 0.0f, 1.0f, 1.0f)), "12345 ");
-	//}
-
-	ImGui::EndChild();
-
-	/*
-	if (ImGui::InputTextMultiline("##MultilineText", storm_buf, storm_buf.GetMaxSize(), ImVec2(-FLT_MIN, -50))) {
-		// Update the global variable when the text changes
-		//multiLineText = buffer;
-		storm_buf.CheckStrSize();
-	}*/
-
-	// Restore default colors
-	ImGui::PopStyleColor(3);
-
-	// Send data Button //
-	if (ImGui::Button("Send")) {
-		// Event: Button was clicked
-		//inputText = buffer; // Save the entered text into the global variable
-		//ImGui::Text("Button clicked! Text: %s", storm_url); // Display a message with the entered text
-		steln_input.CheckStrSize();
-
-		steln_inbuf.AddStr(steln_input.GetStr());
-		steln_inbuf.AddStr("\r\n");
-
-		steln_input.Clean();
-	}
-
-	ImGui::SameLine();
-
-	// Input text field //	
-// ImGui::InputText creates a text input field where the user can type
-// The flag ImGuiInputTextFlags_EnterReturnsTrue makes the function return true when Enter is pressed
-	if (ImGui::InputText("##Send", steln_input, steln_input.GetMaxSize(), ImGuiInputTextFlags_EnterReturnsTrue)) {
-		// Event: Enter key was pressed
-		steln_input.CheckStrSize();		
-
-		if (steln_r)
-			steln_input.AddStr("\r");
-
-		if (steln_n)
-			steln_input.AddStr("\n");
-
-		steln_inbuf.AddStr(steln_input.GetStr());
-
-		steln_input.Clean();
-	}
-
+	// Options
+	ImGui::Checkbox("Echo", &steln_echo);
 	ImGui::SameLine();
 	ImGui::Checkbox("\\r", &steln_r);
 	ImGui::SameLine();
 	ImGui::Checkbox("\\n", &steln_n);
 
+	// Send data Button //
+	if (ImGui::Button("Send")) {
+		StormTeln.DoSend();
+	}
+
+	ImGui::SameLine();
+
+	// Send input
+	if (ImGui::InputText("##Send", steln_input, steln_input.GetMaxSize(), ImGuiInputTextFlags_EnterReturnsTrue)) {
+		StormTeln.DoSend();
+	}
+
 	ImGui::End();
+
+	return;
 }
 
 void MsvWndClose(GLFWwindow *window) {
