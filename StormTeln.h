@@ -114,7 +114,8 @@ public:
 	StormTeln() {
 		state = STELN_STATE_NONE;
 
-		ConnectPrint(LString() + "Hello from StormTeln!" + " v." + PROJECTVER[0].ver + ".", STEWLN_COLOR_BLUE);
+		ConnectPrint(LString() + "Hello from StormTeln" + " v." + PROJECTVER[0].ver + " (" + PROJECTVER[0].date + ").", STEWLN_COLOR_BLUE);
+		ConnectPrint("Enter 'domain:port' for connect or '[ip:]port' for listen.", STEWLN_COLOR_BLUE, 1);
 	}
 
 	// Get

@@ -1,4 +1,5 @@
-#define MSVGUI_GLOBAL_SCALE 2.1f
+#define MSVGUI_GLOBAL_SCALE 1.0f
+#define MSVGUI_GLOBAL_FONTS 30.0f
 
 class MsvWnd {
 public:
@@ -159,8 +160,14 @@ void MsvWndRender(){
 
 	UGLOCK(StormTeln);
 
-	// Window
-	ImGui::Begin("Telnet", &show_window);
+	ImGuiIO &io = ImGui::GetIO();
+
+	// Dynamically adjust position and size of the window
+	ImGui::SetNextWindowPos(ImVec2(0, 0));
+	ImGui::SetNextWindowSize(io.DisplaySize);
+
+	// Create a fullscreen window
+	ImGui::Begin("Telnet", &show_window, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
 	ImGui::SetWindowFontScale(MSVGUI_GLOBAL_SCALE);
 
 	// Connect
@@ -200,9 +207,9 @@ void MsvWndRender(){
 		}
 	}
 
-	ImGui::Separator();
+	//ImGui::Separator();
 
-	editor.Render("TextEditor", ImVec2(-FLT_MIN, -75), 0);
+	editor.Render("TextEditor", ImVec2(-FLT_MIN, -50 - MSVGUI_GLOBAL_FONTS), 0);
 
 	// Options
 	ImGui::Checkbox("Echo", &steln_echo);

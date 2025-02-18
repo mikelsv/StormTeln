@@ -17,6 +17,7 @@
 
 Versions PROJECTVER[] = {
     // new version to up
+    "0.0.0.4", "18.02.2025 15:25",
     "0.0.0.3", "16.02.2025 22:31",
     "0.0.0.2", "15.02.2025 14:09",
     "0.0.0.1", "14.02.2025 11:40" // (Moscow time)
@@ -104,6 +105,8 @@ int main(int args, char *arg[], char *env[]) {
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 460");
     imgui.ConfigWindowsMoveFromTitleBarOnly = 1;
+
+    imgui.Fonts->AddFontFromFileTTF("fonts/Roboto-Medium.ttf", MSVGUI_GLOBAL_FONTS);
 
     // Extender options
     srand(time());
